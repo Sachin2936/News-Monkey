@@ -30,9 +30,9 @@ export default function PracticePage() {
                 const selected = shuffled.slice(0, count);
 
                 const combinedContent = selected
-                    .map((a) => a.content)
+                    .map((a) => a.description)
                     .join(" ... ");
-                console.log(selected);
+                // console.log(selected);
                 const sources = Array.from(new Set(selected.map((a) => a.source.name))).join(", ");
 
                 setArticle({

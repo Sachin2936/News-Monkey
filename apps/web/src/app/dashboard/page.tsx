@@ -1,6 +1,9 @@
 "use client";
 
-import { useTypingStore, type HistoryItem } from "@/store/useTypingStore";
+import { AuthGuard, useAuth } from "@/components/auth-guard";
+import { type HistoryItem } from "@/store/useTypingStore";
+import { dashboardService, type TypingResultResponse } from "@/services/dashboard.service";
+import { syncLocalHistoryToBackend, hasHistorySynced } from "@/lib/sync-history";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -10,22 +13,68 @@ import {
   Calendar,
   Trash2,
   ArrowRight,
-  Search
+  Search,
+  Loader2,
+  RefreshCw
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 
-export default function DashboardPage() {
-  const { history, clearHistory } = useTypingStore();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredHistory, setFilteredHistory] = useState<HistoryItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+// Convert backend response to HistoryItem format for display
+function toHistoryItem(result: TypingResultResponse): HistoryItem {
+  return {
+    id: result.id,
+    wpm: result.wpm,
+    accuracy: result.accuracy,
+    cpm: result.cpm,
+    date: result.createdAt,
+    region: result.region,
+    article: {
+      title: result.articleTitle,
+      source: result.articleSource,
+      url: result.articleUrl,
+    },
+  };
+}
 
-  useEffect(() => {
-    setIsLoaded(true);
+function DashboardContent() {
+  const { user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [filteredHistory, setFilteredHistory] = useState<HistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Fetch typing results from backend
+  const fetchResults = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const results = await dashboardService.getTypingResults();
+      const items = results.map(toHistoryItem);
+      setHistory(items);
+    } catch (error) {
+      console.error("Failed to fetch results:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  // Sync localStorage history on first mount if user is authenticated
+  useEffect(() => {
+    async function syncAndFetch() {
+      if (user && !hasHistorySynced()) {
+        setIsSyncing(true);
+        await syncLocalHistoryToBackend();
+        setIsSyncing(false);
+      }
+      await fetchResults();
+    }
+    syncAndFetch();
+  }, [user, fetchResults]);
+
+  // Filter history based on search term
   useEffect(() => {
     setFilteredHistory(
       history.filter(item =>
@@ -35,7 +84,17 @@ export default function DashboardPage() {
     );
   }, [searchTerm, history]);
 
-  if (!isLoaded) return null;
+  // Clear all history
+  const handleClearHistory = async () => {
+    if (!confirm("Clear all typing history?")) return;
+
+    setIsClearing(true);
+    const success = await dashboardService.clearTypingResults();
+    if (success) {
+      setHistory([]);
+    }
+    setIsClearing(false);
+  };
 
   const stats = {
     avgWpm: history.length > 0
@@ -46,6 +105,19 @@ export default function DashboardPage() {
       : 0,
     totalTests: history.length
   };
+
+  if (isLoading || isSyncing) {
+    return (
+      <div className="container mx-auto px-4 py-24 min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-medium">
+            {isSyncing ? "Syncing your history..." : "Loading your dashboard..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-24 min-h-screen">
@@ -59,7 +131,9 @@ export default function DashboardPage() {
               </div>
               <div>
                 <h1 className="text-4xl font-black font-outfit tracking-tight uppercase">Dashboard</h1>
-                <p className="text-muted-foreground font-medium">Your typing journey and performance history.</p>
+                <p className="text-muted-foreground font-medium">
+                  Welcome back{user?.name ? `, ${user.name}` : ""}! Track your typing journey.
+                </p>
               </div>
             </div>
           </div>
@@ -75,15 +149,22 @@ export default function DashboardPage() {
                 className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium text-sm"
               />
             </div>
+            <button
+              onClick={fetchResults}
+              className="p-3 rounded-2xl bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-foreground transition-all border border-white/10"
+              title="Refresh"
+              disabled={isLoading}
+            >
+              <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
+            </button>
             {history.length > 0 && (
               <button
-                onClick={() => {
-                  if (confirm("Clear all typing history?")) clearHistory();
-                }}
-                className="p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-500/20"
+                onClick={handleClearHistory}
+                disabled={isClearing}
+                className="p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all border border-red-500/20 disabled:opacity-50"
                 title="Clear History"
               >
-                <Trash2 className="w-5 h-5" />
+                {isClearing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
               </button>
             )}
           </div>
@@ -231,5 +312,13 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
   );
 }

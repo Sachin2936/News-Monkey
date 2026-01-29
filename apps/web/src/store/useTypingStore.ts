@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { dashboardService } from '@/services/dashboard.service';
 
 interface Article {
   title: string;
@@ -227,7 +228,7 @@ export const useTypingStore = create<TypingState>()(
       setRegion: (region: 'us' | 'in') => set({ region }),
 
       addResultToHistory: () => {
-        const { wpm, accuracy, cpm, article, region } = get();
+        const { wpm, accuracy, cpm, article, region, errors, totalCharsTyped, category } = get();
         if (!article) return;
 
         const newItem: HistoryItem = {
@@ -247,6 +248,21 @@ export const useTypingStore = create<TypingState>()(
         set(state => ({
           history: [newItem, ...state.history].slice(0, 50) // Keep last 50 results
         }));
+
+        // Also save to backend (fire and forget - don't block on this)
+        dashboardService.saveTypingResult({
+          articleTitle: article.title,
+          articleSource: article.source,
+          articleUrl: article.url,
+          wpm,
+          accuracy,
+          errors,
+          totalCharsTyped,
+          category: category || article.category || 'general',
+          region,
+          cpm,
+          publishedAt: article.publishedAt,
+        }).catch(console.error);
       },
 
       clearHistory: () => set({ history: [] }),

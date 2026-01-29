@@ -1,7 +1,7 @@
 model TypingResult {
   id                String   @id @default(cuid())
-  userId            String?
-  user              User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   articleTitle      String
   articleSource     String
   articleUrl        String
@@ -9,7 +9,9 @@ model TypingResult {
   accuracy          Int
   errors            Int
   totalCharsTyped   Int
+  cpm               Int
   category          String
+  region            String   @default("us")
   publishedAt       DateTime?
   createdAt         DateTime @default(now())
 

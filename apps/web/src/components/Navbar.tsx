@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
@@ -40,7 +41,7 @@ const Navbar = () => {
                         <Newspaper className="w-6 h-6 text-primary" />
                     </div>
                     <span className="text-xl font-bold tracking-tight">
-                        News<span className="text-primary">Type</span>
+                        News<span className="text-primary">Monkey</span>
                     </span>
                 </Link>
 
@@ -87,12 +88,14 @@ const Navbar = () => {
                                 </Avatar>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56 mt-2">
-                                <DropdownMenuLabel className="font-normal">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">{session.user.name}</p>
-                                        <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
-                                    </div>
-                                </DropdownMenuLabel>
+                                <DropdownMenuGroup>
+                                    <DropdownMenuLabel className="font-normal">
+                                        <div className="flex flex-col space-y-1">
+                                            <p className="text-sm font-medium leading-none">{session.user.name}</p>
+                                            <p className="text-xs leading-none text-muted-foreground">{session.user.email}</p>
+                                        </div>
+                                    </DropdownMenuLabel>
+                                </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem className="p-0">
                                     <Link href="/dashboard" className="w-full px-2 py-2 flex items-center gap-2 cursor-pointer">
