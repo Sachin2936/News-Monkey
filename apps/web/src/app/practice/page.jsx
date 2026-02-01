@@ -35,7 +35,7 @@ export default function PracticePage() {
                 const sources = Array.from(new Set(selected.map((a) => a.source.name))).join(", ");
 w
                 setArticle({
-                    title: "Headline Mix: " + selected[0].title,
+                    title: "Headline Mix:" + selected[0].title,
                     content: combinedContent,
                     url: selected[0].url,
                     source: sources,
