@@ -14,11 +14,14 @@
     "@News-Monkey/db": "*",
     "@News-Monkey/env": "*",
     "async-mutex": "^0.5.0",
+    "axios": "^1.7.0",
     "better-auth": "^1.4.9",
+    "cheerio": "^1.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
+    "xml2js": "^0.6.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -26,6 +29,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^22.13.14",
+    "@types/xml2js": "^0.4.14",
     "tsdown": "^0.16.5",
     "tsx": "^4.19.2",
     "typescript": "^5"

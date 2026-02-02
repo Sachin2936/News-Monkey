@@ -1,4 +1,4 @@
-const SERVER_URL ='http://localhost:3000';
+const SERVER_URL = 'http://localhost:3000';
 
 /**
  * Fetch news from our backend server (Direct Fetch)
@@ -7,7 +7,7 @@ export async function getNews(category = 'general', _country = 'us') {
     try {
         console.log(`[Frontend] Fetching news from ${SERVER_URL}/api/news?category=${category}`);
         const response = await fetch(`${SERVER_URL}/api/news?category=${category}`, {
-            next: { revalidate: 3600 } // Cache in Next.js for 1 hour
+            cache: 'no-store' // Disable Next.js caching to get fresh data
         });
 
         if (!response.ok) {
@@ -15,7 +15,7 @@ export async function getNews(category = 'general', _country = 'us') {
         }
 
         const articles = await response.json();
-        // console.log("[Frontend] Fetched news:", articles);
+        console.log("[Frontend] Fetched articles count:", articles.length);
         return articles;
     } catch (error) {
         console.error("Error fetching news from backend:", error);
