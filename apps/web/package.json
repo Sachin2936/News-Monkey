@@ -11,7 +11,6 @@
     "@base-ui/react": "^1.0.0",
     "@News-Monkey/auth": "*",
     "@News-Monkey/env": "*",
-    "@prisma/client": "^7.1.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@tanstack/react-form": "^1.27.3",
