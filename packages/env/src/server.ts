@@ -11,7 +11,6 @@ export const env = createEnv({
       .transform((val) => val.split(",").map(v => v.trim()))
       .pipe(z.array(z.string().url())),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-    GOOGLE_GENERATIVE_AI_API_KEY: z.string().optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,
