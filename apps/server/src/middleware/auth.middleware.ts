@@ -23,6 +23,10 @@ export async function requireAuth(
     next: NextFunction
 ): Promise<void> {
     try {
+        // Debug: Log request origin and cookies
+        console.log('[Auth] Request origin:', req.headers.origin);
+        console.log('[Auth] Cookie header:', req.headers.cookie ? 'Present' : 'Missing');
+
         // Get the session token from cookies
         const sessionToken = req.headers.cookie
             ?.split('; ')
@@ -30,9 +34,12 @@ export async function requireAuth(
             ?.split('=')[1];
 
         if (!sessionToken) {
+            console.log('[Auth] No session token found in cookies');
             res.status(401).json({ error: "Authentication required" });
             return;
         }
+
+        console.log('[Auth] Session token found, verifying...');
 
         // Verify the session using Better Auth
         const session = await auth.api.getSession({
@@ -40,9 +47,12 @@ export async function requireAuth(
         });
 
         if (!session || !session.user) {
+            console.log('[Auth] Session validation failed - session:', !!session, 'user:', !!(session?.user));
             res.status(401).json({ error: "Invalid or expired session" });
             return;
         }
+
+        console.log('[Auth] Session validated for user:', session.user.email);
 
         // Attach user and session info to request
         (req as AuthenticatedRequest).user = {
@@ -59,7 +69,7 @@ export async function requireAuth(
 
         next();
     } catch (error) {
-        console.error("Authentication error:", error);
+        console.error("[Auth] Authentication error:", error);
         res.status(401).json({ error: "Authentication failed" });
     }
 }
