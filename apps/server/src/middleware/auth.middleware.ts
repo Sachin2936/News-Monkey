@@ -23,9 +23,9 @@ export async function requireAuth(
     next: NextFunction
 ): Promise<void> {
     try {
-        // Debug: Log request origin and cookies
-        console.log('[Auth] Request origin:', req.headers.origin);
-        console.log('[Auth] Cookie header:', req.headers.cookie ? 'Present' : 'Missing');
+        // // Debug: Log request origin and cookies
+        // console.log('[Auth] Request origin:', req.headers.origin);
+        // console.log('[Auth] Cookie header:', req.headers.cookie ? 'Present' : 'Missing');
 
         // Get the session token from cookies
         const sessionToken = req.headers.cookie
