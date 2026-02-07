@@ -23,6 +23,8 @@ export const auth = betterAuth({
       sameSite: isProduction ? "none" : "lax",
       secure: isProduction,
       httpOnly: true,
+      path: "/",
+      domain: isProduction ? ".typenews.in" : undefined,
     },
   },
   plugins: [],
