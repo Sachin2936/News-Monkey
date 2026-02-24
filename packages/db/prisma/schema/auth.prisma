@@ -8,7 +8,12 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
-  typingResults TypingResult[]
+  typingResults   TypingResult[]
+  seenArticles    UserSeenArticle[]
+  profile         UserProfile?
+  badges          UserBadge[]
+  dailyTasks      DailyTaskProgress[]
+  timelineEvents  TimelineEvent[]
 
   @@unique([email])
   @@map("user")

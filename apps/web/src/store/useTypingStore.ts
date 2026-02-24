@@ -47,6 +47,10 @@ interface TypingState {
   errors: number;
   totalCharsTyped: number;
   correctCharsTyped: number;
+  // Monotonic error counter — NEVER decreases on backspace
+  totalErrorsEver: number;
+  // Previous input length so we can detect new keystrokes vs deletions
+  prevInputLength: number;
 
   // Stats
   wpm: number;
@@ -54,10 +58,25 @@ interface TypingState {
   cpm: number;
   timeLeft: number;
 
-  // Settings
+  // Settings — sound
   soundEnabled: boolean;
   soundProfile: 'mechanical' | 'clicky' | 'thock' | 'blaster' | 'lightsaber';
+  hideErrorSound: boolean;
+
+  // Settings — practice
   focusMode: boolean;
+  showLiveWpm: boolean;
+  autoPause: boolean;
+
+  // Settings — appearance
+  theme: 'system' | 'light' | 'dark';
+  fontSize: number;           // px, applied to typing area text
+  caretStyle: 'underline' | 'block' | 'bar';
+  smoothCaret: boolean;
+  animatedBg: boolean;
+
+  // Settings — typing behaviour
+  highlightWord: boolean;
 
   // History
   history: HistoryItem[];
@@ -76,6 +95,15 @@ interface TypingState {
   toggleSound: () => void;
   setSoundProfile: (profile: 'mechanical' | 'clicky' | 'thock' | 'blaster' | 'lightsaber') => void;
   toggleFocusMode: () => void;
+  setShowLiveWpm: (v: boolean) => void;
+  setAutoPause: (v: boolean) => void;
+  setTheme: (v: 'system' | 'light' | 'dark') => void;
+  setFontSize: (v: number) => void;
+  setCaretStyle: (v: 'underline' | 'block' | 'bar') => void;
+  setSmoothCaret: (v: boolean) => void;
+  setAnimatedBg: (v: boolean) => void;
+  setHighlightWord: (v: boolean) => void;
+  setHideErrorSound: (v: boolean) => void;
   repeatArticle: () => void;
   setTimeLeft: (time: number) => void;
   setRegion: (region: 'us' | 'in') => void;
@@ -100,13 +128,24 @@ export const useTypingStore = create<TypingState>()(
       errors: 0,
       totalCharsTyped: 0,
       correctCharsTyped: 0,
+      totalErrorsEver: 0,
+      prevInputLength: 0,
       wpm: 0,
       accuracy: 0,
       cpm: 0,
       timeLeft: 60,
       soundEnabled: true,
       soundProfile: 'mechanical',
+      hideErrorSound: false,
       focusMode: false,
+      showLiveWpm: true,
+      autoPause: false,
+      theme: 'system',
+      fontSize: 32,
+      caretStyle: 'underline',
+      smoothCaret: true,
+      animatedBg: true,
+      highlightWord: false,
       history: [],
 
       setDuration: (duration: number) => set({ duration, timeLeft: duration }),
@@ -123,6 +162,8 @@ export const useTypingStore = create<TypingState>()(
         errors: 0,
         totalCharsTyped: 0,
         correctCharsTyped: 0,
+        totalErrorsEver: 0,
+        prevInputLength: 0,
         wpm: 0,
         accuracy: 100,
         cpm: 0,
@@ -140,6 +181,10 @@ export const useTypingStore = create<TypingState>()(
         userInput: '',
         cursorIndex: 0,
         errors: 0,
+        totalCharsTyped: 0,
+        correctCharsTyped: 0,
+        totalErrorsEver: 0,
+        prevInputLength: 0,
         startTime: null,
         endTime: null,
         wpm: 0,
@@ -155,28 +200,42 @@ export const useTypingStore = create<TypingState>()(
       },
 
       updateInput: (input: string) => {
-        const { article, isActive, startTest, isFinished } = get();
+        const { article, isActive, startTest, isFinished, prevInputLength, totalErrorsEver } = get();
         if (isFinished) return;
         if (!isActive) startTest();
 
         const targetText = article?.content || '';
-        let errors = 0;
+        let currentErrors = 0;
         let correctChars = 0;
 
         for (let i = 0; i < input.length; i++) {
           if (input[i] !== targetText[i]) {
-            errors++;
+            currentErrors++;
           } else {
             correctChars++;
+          }
+        }
+
+        // Only count NEW wrong keystrokes — never let deleting reduce totalErrorsEver.
+        // If the user typed a new character (input grew) and it's wrong, add to the
+        // permanent error tally. Backspace/delete never reduces this counter.
+        let newTotalErrorsEver = totalErrorsEver;
+        if (input.length > prevInputLength) {
+          // A new character was added — check if it's wrong
+          const newCharIndex = input.length - 1;
+          if (input[newCharIndex] !== targetText[newCharIndex]) {
+            newTotalErrorsEver = totalErrorsEver + 1;
           }
         }
 
         set({
           userInput: input,
           cursorIndex: input.length,
-          errors,
+          errors: currentErrors,
           totalCharsTyped: input.length,
-          correctCharsTyped: correctChars
+          correctCharsTyped: correctChars,
+          totalErrorsEver: newTotalErrorsEver,
+          prevInputLength: input.length,
         });
 
         if (input.length === targetText.length) {
@@ -187,7 +246,7 @@ export const useTypingStore = create<TypingState>()(
       },
 
       calculateStats: () => {
-        const { startTime, correctCharsTyped, totalCharsTyped, isFinished, endTime } = get();
+        const { startTime, correctCharsTyped, totalCharsTyped, totalErrorsEver, isFinished, endTime } = get();
         if (!startTime) return;
 
         const now = isFinished && endTime ? endTime : Date.now();
@@ -197,8 +256,13 @@ export const useTypingStore = create<TypingState>()(
 
         const wpm = Math.round((correctCharsTyped / 5) / timeElapsedMinutes);
         const cpm = Math.round(correctCharsTyped / timeElapsedMinutes);
-        const accuracy = totalCharsTyped > 0
-          ? Math.round((correctCharsTyped / totalCharsTyped) * 100)
+
+        // Accuracy uses totalErrorsEver (monotonically increasing) so deleting
+        // a wrong character doesn't restore accuracy to 100%.
+        // Base = total chars typed ever (errors + correct at current position)
+        const totalEver = totalCharsTyped + totalErrorsEver;
+        const accuracy = totalEver > 0
+          ? Math.max(0, Math.round(((totalEver - totalErrorsEver) / totalEver) * 100))
           : 100;
 
         set({ wpm, cpm, accuracy });
@@ -207,12 +271,25 @@ export const useTypingStore = create<TypingState>()(
       toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
       setSoundProfile: (soundProfile) => set({ soundProfile }),
       toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
+      setShowLiveWpm: (showLiveWpm) => set({ showLiveWpm }),
+      setAutoPause: (autoPause) => set({ autoPause }),
+      setTheme: (theme) => set({ theme }),
+      setFontSize: (fontSize) => set({ fontSize }),
+      setCaretStyle: (caretStyle) => set({ caretStyle }),
+      setSmoothCaret: (smoothCaret) => set({ smoothCaret }),
+      setAnimatedBg: (animatedBg) => set({ animatedBg }),
+      setHighlightWord: (highlightWord) => set({ highlightWord }),
+      setHideErrorSound: (hideErrorSound) => set({ hideErrorSound }),
       repeatArticle: () => {
         if (get().article) {
           set({
             userInput: '',
             cursorIndex: 0,
             errors: 0,
+            totalCharsTyped: 0,
+            correctCharsTyped: 0,
+            totalErrorsEver: 0,
+            prevInputLength: 0,
             isActive: false,
             isFinished: false,
             startTime: null,
@@ -265,17 +342,42 @@ export const useTypingStore = create<TypingState>()(
         }).catch(console.error);
       },
 
-      clearHistory: () => set({ history: [] }),
+      clearHistory: () => {
+        set({ history: [] });
+        dashboardService.clearTypingResults().catch(console.error);
+      },
     }),
     {
       name: 'news-monkey-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
+        // sound
         soundEnabled: state.soundEnabled,
         soundProfile: state.soundProfile,
+        hideErrorSound: state.hideErrorSound,
+        // practice
         focusMode: state.focusMode,
-        history: state.history
+        showLiveWpm: state.showLiveWpm,
+        autoPause: state.autoPause,
+        // appearance
+        theme: state.theme,
+        fontSize: state.fontSize,
+        caretStyle: state.caretStyle,
+        smoothCaret: state.smoothCaret,
+        animatedBg: state.animatedBg,
+        // typing behaviour
+        highlightWord: state.highlightWord,
+        // history
+        history: state.history,
+        // config
+        duration: state.duration,
       }),
+      version: 4,
+      migrate: (persisted: unknown) => {
+        const s = persisted as Record<string, unknown>;
+        s.fontSize = 32;
+        return s;
+      },
     }
   )
 );

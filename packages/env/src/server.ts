@@ -11,6 +11,8 @@ export const env = createEnv({
       .transform((val) => val.split(",").map(v => v.trim()))
       .pipe(z.array(z.string().url())),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    NEWS_API_KEY: z.string().optional(),
+    GEMINI_API_KEY: z.string().min(1),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

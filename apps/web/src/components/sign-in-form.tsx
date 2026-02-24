@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -49,10 +50,11 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   });
 
   // Redirect if already logged in
-  if (!isPending && session?.user) {
-    router.push("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.push("/dashboard");
+    }
+  }, [isPending, session, router]);
 
   return (
     <div className="space-y-6">

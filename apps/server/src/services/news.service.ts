@@ -1,295 +1,204 @@
-import axios from "axios";
-import { parseStringPromise } from "xml2js";
-
-// ======================
-// Types
-// ======================
-
-export interface NewsArticle {
-    title: string;
-    content: string;
-    source: { name: string };
-    publishedAt: string;
-    url: string;
-    imageUrl?: string | null;
-    category: string;
-}
-
-interface RSSFeed {
-    category: string;
-    url: string;
-}
-
-// ======================
-// Constants
-// ======================
-
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
-const FEED_LIST_CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours
-const RSS_INDEX_URL = "https://timesofindia.indiatimes.com/rss.cms";
-
-// Fallback feeds in case scraping fails
-const FALLBACK_FEEDS: Record<string, string> = {
-    general: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
-    technology: "https://timesofindia.indiatimes.com/rssfeeds/66949542.cms",
-    business: "https://timesofindia.indiatimes.com/rssfeeds/1898055.cms",
-    sports: "https://timesofindia.indiatimes.com/rssfeeds/4719148.cms",
-    entertainment: "https://timesofindia.indiatimes.com/rssfeeds/1081479906.cms",
-    science: "https://timesofindia.indiatimes.com/rssfeeds/4719161.cms",
-    health: "https://timesofindia.indiatimes.com/rssfeeds/3908999.cms",
-};
-
-// ======================
-// Text Normalizer (Enhanced)
-// ======================
-
-function normalizeText(text: string): string {
-    if (!text) return "";
-
-    return text
-        .replace(/<script[^>]*>.*?<\/script>/gi, "")
-        .replace(/<style[^>]*>.*?<\/style>/gi, "")
-        .replace(/<[^>]+>/g, "")
-        .replace(/&nbsp;/gi, " ")
-        .replace(/&amp;/gi, "&")
-        .replace(/&quot;/gi, '"')
-        .replace(/&apos;/gi, "'")
-        .replace(/&lt;/gi, "<")
-        .replace(/&gt;/gi, ">")
-        .replace(/&#\d+;/g, "") // Remove numeric HTML entities
-        .replace(/[^\w\s.,?!'"-]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-}
-
-// ======================
-// News Service
-// ======================
+import prisma from "@News-Monkey/db";
+import { SourceManager } from "./news/source.manager";
+import { MultiRssSource } from "./news/sources/multi-rss.source";
+import { NewsApiSource } from "./news/sources/news-api.source";
+import { ScraperSource } from "./news/sources/scraper.source";
+import { RotationService } from "./news/rotation.service";
+import { FullContentService } from "./news/full-content.service";
+import type { NewsCategory, NormalizedArticle } from "./news/types";
 
 export class NewsService {
-    private static cache: Map<string, NewsArticle[]> = new Map();
-    private static lastFetch: Map<string, number> = new Map();
-    private static feedList: Map<string, string> = new Map();
-    private static feedListLastFetch: number = 0;
+    private static sourceManager = new SourceManager();
+    private static isInitialized = false;
 
-    // Warm cache on startup
     static async initialize() {
-        await this.scrapeFeedList();
-        this.getNews("general", 20).catch(console.error);
+        if (this.isInitialized) return;
+
+        // Register BBC News
+        this.sourceManager.registerSource(new MultiRssSource({
+            name: "BBC News",
+            categoryMap: {
+                general: "http://feeds.bbci.co.uk/news/rss.xml",
+                world: "http://feeds.bbci.co.uk/news/world/rss.xml",
+                technology: "http://feeds.bbci.co.uk/news/technology/rss.xml",
+                business: "http://feeds.bbci.co.uk/news/business/rss.xml",
+                politics: "http://feeds.bbci.co.uk/news/politics/rss.xml",
+            }
+        }));
+
+        // Register Google News
+        this.sourceManager.registerSource(new MultiRssSource({
+            name: "Google News",
+            categoryMap: {
+                general: "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en",
+                technology: "https://news.google.com/rss/headlines/section/topic/TECHNOLOGY?hl=en-IN&gl=IN&ceid=IN:en",
+                sports: "https://news.google.com/rss/headlines/section/topic/SPORTS?hl=en-IN&gl=IN&ceid=IN:en",
+                business: "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en",
+                fintech: "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-IN&gl=IN&ceid=IN:en", // Google News uses Business for Finance/Fintech
+                entertainment: "https://news.google.com/rss/headlines/section/topic/ENTERTAINMENT?hl=en-IN&gl=IN&ceid=IN:en",
+                science: "https://news.google.com/rss/headlines/section/topic/SCIENCE?hl=en-IN&gl=IN&ceid=IN:en",
+            }
+        }));
+
+        // Register Times of India
+        this.sourceManager.registerSource(new MultiRssSource({
+            name: "Times of India",
+            categoryMap: {
+                general: "https://timesofindia.indiatimes.com/rssfeedstopstories.cms",
+                world: "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
+                politics: "https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms",
+                sports: "https://timesofindia.indiatimes.com/rssfeeds/4719148.cms",
+                technology: "https://timesofindia.indiatimes.com/rssfeeds/66949542.cms",
+                business: "https://timesofindia.indiatimes.com/rssfeeds/1898055.cms",
+                entertainment: "https://timesofindia.indiatimes.com/rssfeeds/1081479906.cms",
+                science: "https://timesofindia.indiatimes.com/rssfeeds/-2128672765.cms",
+            }
+        }));
+
+        this.sourceManager.registerSource(new NewsApiSource());
+        this.sourceManager.registerSource(new ScraperSource());
+
+        this.isInitialized = true;
+        console.log("[NewsService] Modular News system initialized");
+
+        // --- SCHEDULER ---
+
+        // 1. Fetch Headlines (Every 30 min)
+        this.syncAllCategories().catch(console.error);
+        setInterval(() => {
+            console.log("[Scheduler] Triggering 30m Fetch...");
+            this.syncAllCategories().catch(console.error);
+        }, 30 * 60 * 1000);
+
+        // 2. Cleanup Expired Articles (Every 6 hrs)
+        setInterval(() => {
+            console.log("[Scheduler] Triggering 6h Cleanup...");
+            this.cleanupOldArticles().catch(console.error);
+        }, 6 * 60 * 60 * 1000);
+
+        // 3. Daily Re-indexing (Every 24 hrs)
+        setInterval(() => {
+            console.log("[Scheduler] Triggering Daily Re-index...");
+            this.reindexCategories().catch(console.error);
+        }, 24 * 60 * 60 * 1000);
     }
 
-    // ======================
-    // RSS Feed Scraper
-    // ======================
+    static async cleanupOldArticles() {
+        const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+        const deleted = await prisma.newsArticle.deleteMany({
+            where: {
+                createdAt: { lt: fortyEightHoursAgo }
+            }
+        });
+        console.log(`[NewsService] Cleanup: Deleted ${deleted.count} expired articles`);
+    }
 
-    private static async scrapeFeedList(): Promise<void> {
-        const now = Date.now();
+    static async reindexCategories() {
+        console.log("[NewsService] Starting daily re-indexing...");
+        // For re-indexing, we could clear non-seen articles and refetch,
+        // but for now let's just do a deep sync of top articles.
+        await this.syncAllCategories();
+    }
 
-        // Use cached feed list if still valid
-        if (this.feedList.size > 0 && now - this.feedListLastFetch < FEED_LIST_CACHE_DURATION) {
-            console.log("[NewsService] Using cached RSS feed list");
-            return;
+    static async syncAllCategories() {
+        console.log("[NewsService] Starting background sync for all categories...");
+        const categories: NewsCategory[] = ['general', 'world', 'politics', 'sports', 'technology', 'business', 'fintech', 'entertainment', 'science'];
+
+        for (const category of categories) {
+            await this.syncCategory(category);
         }
+        console.log("[NewsService] Background sync completed");
+    }
 
+    static async syncCategory(category: NewsCategory) {
         try {
-            console.log("[NewsService] Scraping RSS feed list from TOI...");
-
-            const response = await axios.get(RSS_INDEX_URL, {
-                timeout: 10000,
-                headers: {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                },
-            });
-
-            const html = response.data;
-
-            // Extract RSS feed links and their categories
-            const feedRegex = /<a[^>]*href=["'](https:\/\/timesofindia\.indiatimes\.com\/rssfeeds\/[^"']+)["'][^>]*>([^<]+)<\/a>/gi;
-            const feeds: RSSFeed[] = [];
-
-            let match;
-            while ((match = feedRegex.exec(html)) !== null) {
-                const url = match[1];
-                const rawCategory = match[2]?.trim() || "";
-
-                if (url && rawCategory) {
-                    // Normalize category name to lowercase, remove special chars
-                    const category = rawCategory
-                        .toLowerCase()
-                        .replace(/[^a-z0-9\s]/g, "")
-                        .replace(/\s+/g, "-")
-                        .replace(/-+/g, "-")
-                        .trim();
-
-                    if (category) {
-                        feeds.push({ category, url });
-                    }
-                }
-            }
-
-            // Also extract general feed and other feed formats
-            const linkRegex = /<a[^>]*href=["'](https:\/\/timesofindia\.indiatimes\.com\/[^"']*rss[^"']*)["'][^>]*>([^<]+)<\/a>/gi;
-            while ((match = linkRegex.exec(html)) !== null) {
-                const url = match[1];
-                const rawCategory = match[2]?.trim() || "";
-
-                if (url && rawCategory && !feeds.some(f => f.url === url)) {
-                    const category = rawCategory
-                        .toLowerCase()
-                        .replace(/[^a-z0-9\s]/g, "")
-                        .replace(/\s+/g, "-")
-                        .replace(/-+/g, "-")
-                        .trim();
-
-                    if (category) {
-                        feeds.push({ category, url });
-                    }
-                }
-            }
-
-            // Update feed list
-            this.feedList.clear();
-
-            // Add general/top-stories as the default feed
-            this.feedList.set("general", "https://timesofindia.indiatimes.com/rssfeedstopstories.cms");
-
-            // Add scraped feeds
-            for (const feed of feeds) {
-                if (!this.feedList.has(feed.category)) {
-                    this.feedList.set(feed.category, feed.url);
-                }
-            }
-
-            this.feedListLastFetch = now;
-
-            console.log(`[NewsService] Scraped ${this.feedList.size} RSS feeds`);
-            console.log(`[NewsService] Available categories:`, Array.from(this.feedList.keys()));
-
-        } catch (error) {
-            console.error("[NewsService] Failed to scrape RSS feed list:", error);
-
-            // Use fallback feeds if scraping fails
-            if (this.feedList.size === 0) {
-                console.log("[NewsService] Using fallback feed list");
-                for (const [category, url] of Object.entries(FALLBACK_FEEDS)) {
-                    this.feedList.set(category, url);
-                }
-            }
-        }
-    }
-
-    // Public method - matches existing API signature
-    static async getNews(category: string = 'general', limit: number = 10): Promise<NewsArticle[]> {
-        // Ensure feed list is up to date
-        await this.scrapeFeedList();
-
-        const now = Date.now();
-        const cacheKey = category;
-        const lastFetch = this.lastFetch.get(cacheKey) || 0;
-        const cachedArticles = this.cache.get(cacheKey) || [];
-
-        if (cachedArticles.length > 0 && now - lastFetch < CACHE_DURATION) {
-            console.log(`[NewsService] Returning cached articles for ${category}`);
-            return cachedArticles.slice(0, limit);
-        }
-
-        console.log(`[NewsService] Fetching RSS feed for ${category}...`);
-
-        const articles = await this.fetchFromRSS(category);
-
-        if (articles.length > 0) {
-            this.cache.set(cacheKey, articles);
-            this.lastFetch.set(cacheKey, now);
-        }
-
-        return articles.slice(0, limit);
-    }
-
-    // ======================
-    // RSS Fetcher
-    // ======================
-
-    private static async fetchFromRSS(category: string): Promise<NewsArticle[]> {
-        try {
-            const feedUrl = this.feedList.get(category) || this.feedList.get("general") || FALLBACK_FEEDS.general;
-
-            const response = await axios.get(feedUrl, {
-                timeout: 10000,
-                headers: {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                },
-            });
-
-            const parsed = await parseStringPromise(response.data);
-
-            const items = parsed?.rss?.channel?.[0]?.item || [];
-
-            const results: NewsArticle[] = [];
-
-            for (const item of items) {
-                const rawTitle = item.title?.[0];
-                const rawDesc = item.description?.[0];
-                const link = item.link?.[0];
-                const pubDate = item.pubDate?.[0];
-
-                if (!rawTitle || !rawDesc) continue;
-
-                const title = normalizeText(rawTitle);
-                const content = normalizeText(rawDesc);
-
-                // Skip if content is too short for typing practice
-                if (title.length < 15 || content.length < 40) continue;
-
-                results.push({
-                    title,
-                    content,
-                    source: { name: "Times of India" },
-                    publishedAt: pubDate || new Date().toISOString(),
-                    url: link || "",
-                    imageUrl: null,
-                    category,
+            const articles = await this.sourceManager.fetchAll(category);
+            for (const article of articles) {
+                await prisma.newsArticle.upsert({
+                    where: { url: article.url },
+                    create: {
+                        title: article.title,
+                        content: article.content,
+                        sourceName: article.sourceName,
+                        url: article.url,
+                        imageUrl: article.imageUrl,
+                        category: article.category,
+                        publishedAt: article.publishedAt,
+                        isFullContent: false,
+                    },
+                    update: {}, // Don't overwrite if exists to preserve full content if already scraped
                 });
             }
-
-            console.log(`[NewsService] Fetched ${results.length} articles for ${category}`);
-
-            return results;
-        } catch (err) {
-            console.error(`[NewsService] RSS Fetch Failed for ${category}:`, err);
-            return [];
+        } catch (error) {
+            console.error(`[NewsService] Sync failed for ${category}:`, error);
         }
     }
 
-    // ======================
-    // Status
-    // ======================
+    /**
+     * Get a SINGLE long news article for practice.
+     */
+    static async getNews(category: string = 'general', userId: string | null = null): Promise<NormalizedArticle[]> {
+        await this.initialize();
+
+        // 1. Get a single article from rotation
+        let article = await RotationService.getRandomArticle(userId, category as NewsCategory);
+
+        // 2. If no article found, trigger an on-demand sync
+        if (!article) {
+            console.log(`[NewsService] Cache miss for ${category}, triggering on-demand sync...`);
+            await this.syncCategory(category as NewsCategory);
+            article = await RotationService.getRandomArticle(userId, category as NewsCategory);
+        }
+
+        if (!article) return [];
+
+        // 2. Ensure it has full content (3+ mins of typing)
+        let finalContent = article.content;
+
+        // Check if we already have full content in DB or if it's just a snippet
+        const dbArticle = await prisma.newsArticle.findUnique({ where: { url: article.url } });
+
+        if (dbArticle && !dbArticle.isFullContent) {
+            console.log(`[NewsService] On-demand scraping full content for: ${article.title}`);
+            const fullContent = await FullContentService.fetchFullContent(article.url);
+
+            if (fullContent && fullContent.length > 500) {
+                finalContent = fullContent;
+                // Update DB so we don't scrape it again
+                await prisma.newsArticle.update({
+                    where: { url: article.url },
+                    data: {
+                        content: fullContent,
+                        isFullContent: true
+                    }
+                });
+            } else {
+                console.warn("[NewsService] Scraper returned too little content, using existing snippet");
+            }
+        }
+
+        return [{
+            ...article,
+            content: finalContent
+        }];
+    }
 
     static async getStatus() {
-        await this.scrapeFeedList();
-
-        const cacheStats: Record<string, number> = {};
-        for (const [category, articles] of this.cache.entries()) {
-            cacheStats[category] = articles.length;
-        }
+        const stats = await prisma.newsArticle.groupBy({
+            by: ['category'],
+            _count: { _all: true }
+        });
+        const categoryStats: Record<string, number> = {};
+        stats.forEach(s => categoryStats[s.category] = s._count._all);
 
         return {
-            mode: "rss-feed",
-            provider: "Times of India RSS",
             status: "ok",
-            message: "News is fetched from Times of India RSS feeds. Feeds are dynamically scraped.",
-            cachedCategories: cacheStats,
-            availableCategories: Array.from(this.feedList.keys()),
-            totalFeeds: this.feedList.size,
+            provider: "Modular Aggregator with Scraper",
+            categories: categoryStats,
+            sources: ["BBC", "Google News", "TOI", "NewsAPI", "Scraper"],
+            lastSync: new Date().toISOString(),
         };
     }
-
-    // ======================
-    // Utility
-    // ======================
-
-    static async getRandomArticle(category: string = 'general'): Promise<NewsArticle | null> {
-        const news = await this.getNews(category);
-        if (news.length === 0) return null;
-        return news[Math.floor(Math.random() * news.length)] ?? null;
-    }
 }
+
+export type { NormalizedArticle } from "./news/types";

@@ -11,6 +11,7 @@
     "db:generate": "cd ../../packages/db && npm run db:generate"
   },
   "dependencies": {
+    "@google/genai": "^1.42.0",
     "@News-Monkey/auth": "*",
     "@News-Monkey/db": "*",
     "@News-Monkey/env": "*",

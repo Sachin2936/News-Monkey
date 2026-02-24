@@ -1,28 +1,28 @@
+/* stylelint-disable */
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: oklch(0.12 0.04 260);
+  --foreground: oklch(0.98 0.01 260);
+  --card: oklch(0.15 0.05 260);
+  --card-foreground: oklch(0.95 0.01 260);
+  --popover: oklch(0.15 0.05 260);
+  --popover-foreground: oklch(0.95 0.01 260);
+  --primary: oklch(0.72 0.25 285);
+  --primary-foreground: oklch(0.1 0 0);
+  --secondary: oklch(0.2 0.1 260);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.2 0.05 260);
+  --muted-foreground: oklch(0.7 0.05 260);
+  --accent: oklch(0.7 0.2 320);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.6 0.2 25);
+  --border: oklch(0.25 0.05 260);
+  --input: oklch(0.25 0.05 260);
+  --ring: oklch(0.72 0.25 285);
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
@@ -159,6 +159,9 @@
 }
 
 @layer utilities {
+  .mask-marquee {
+    mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  }
 
   /* Custom gradient text */
   .gradient-text {
@@ -207,4 +210,26 @@
 
 .animate-pulse-glow {
   animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom smooth minimal scrollbar for the long 3000vh journey */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #fff;
+}
+
+body {
+  scroll-behavior: smooth;
 }

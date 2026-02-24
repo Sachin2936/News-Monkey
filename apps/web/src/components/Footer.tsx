@@ -1,13 +1,19 @@
+"use client";
+
 import Link from 'next/link';
 import { Newspaper, Github, Twitter, Linkedin } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 
 const Footer = () => {
+    const { data: session } = authClient.useSession();
+    const homeHref = session ? '/dashboard' : '/';
+
     return (
         <footer className="bg-background/50 border-t border-white/10 pt-16 pb-8">
             <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                     <div className="col-span-1 md:col-span-2 space-y-4">
-                        <Link href="/" as="/" className="flex items-center gap-2">
+                        <Link href={homeHref} className="flex items-center gap-2">
                             <Newspaper className="w-6 h-6 text-primary" />
                             <span className="text-xl font-bold tracking-tight">
                                 News<span className="text-primary">Type</span>

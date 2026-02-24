@@ -1,0 +1,75 @@
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stats
+  xp              Int      @default(0)
+  totalTests      Int      @default(0)
+  avgWpm          Int      @default(0)
+  bestWpm         Int      @default(0)
+  avgAccuracy     Int      @default(0)
+  accuracyHighs   Int      @default(0) // Tests with >95% accuracy
+  
+  // Streaks
+  streak          Int      @default(0) // Daily login/activity streak
+  typingStreak    Int      @default(0) // Consecutive days w/ typing
+  lastActiveDate  String?  // YYYY-MM-DD
+  
+  // Progress
+  articlesRead    Int      @default(0)
+  editorialsSaved Int      @default(0)
+  practiceMinutes Int      @default(0)
+  
+  // Customizations
+  nickname        String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@map("user_profile")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String   // The string ID from the BADGES array in code
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badge")
+}
+
+model DailyTaskProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // YYYY-MM-DD (resets tasks automatically when mismatch)
+  taskId    String   // The string ID from the TASK_POOL
+  progress  Int      @default(0)
+  completed Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date, taskId])
+  @@index([userId, date])
+  @@map("daily_task_progress")
+}
+
+model TimelineEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // 'xp', 'badge', 'test'
+  label     String
+  detail    String?
+  icon      String
+  color     String
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([timestamp(sort: Desc)])
+  @@map("timeline_event")
+}
