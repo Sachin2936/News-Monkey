@@ -323,7 +323,7 @@ export const useTypingStore = create<TypingState>()(
         };
 
         set(state => ({
-          history: [newItem, ...state.history].slice(0, 50) // Keep last 50 results
+          history: [newItem, ...state.history].slice(0, 10) // Keep last 10 results
         }));
 
         // Also save to backend (fire and forget - don't block on this)

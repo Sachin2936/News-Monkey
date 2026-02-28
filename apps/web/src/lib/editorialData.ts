@@ -3,6 +3,7 @@ export interface Editorial {
     category: string;
     title: string;
     context: string;
+    easyExplanation: string; // super simple "explain like I'm five" version
     deepDive: string; // extended analysis paragraph
     positives: string[];
     negatives: string[];
@@ -38,6 +39,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "The Rise of AI Coaching in Professional Football",
         context:
             "Artificial intelligence tools are now being integrated into football coaching strategies worldwide. From real-time player fatigue analysis to opponent pattern recognition, AI is reshaping how teams prepare and compete at the highest level.",
+        easyExplanation: "Imagine a super-smart computer assistant that helps football coaches by watching players' energy and predicting injuries before they happen. It's like having a crystal ball for the team's health!",
         deepDive:
             "Clubs like FC Barcelona, Manchester City, and Bayern Munich now deploy computer-vision systems that track 25+ data points per player 50 times per second during matches. These systems measure sprint deceleration patterns to flag micro-injuries before they become macro-problems. The implications extend beyond elite football — lower-league clubs leveraging open-source AI tools have reported 18% reductions in training-related injuries within a single season, effectively bridging a talent gap that money alone could not close.",
         positives: [
@@ -76,6 +78,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Olympic Inclusion of Esports: Sport or Entertainment?",
         context:
             "The International Olympic Committee has officially sanctioned an Esports Olympic Games event, generating fierce debate about inclusion criteria, athlete welfare, and the evolving definition of sport in the 21st century.",
+        easyExplanation: "The Olympics are adding video games to their events! People are now arguing if playing video games should be counted as a real sport like running or swimming.",
         deepDive:
             "The inaugural Olympic Esports Games in Saudi Arabia attracted 500,000+ live viewers and 250 million digital interactions — metrics that rival traditional Olympic sports broadcasts. However, the structural issues run deep: game publishers retain IP control over titles, meaning the IOC cannot guarantee which games will feature in future editions. This corporate power dynamic is unprecedented in Olympic history and raises fundamental questions about sovereignty of sporting governance.",
         positives: [
@@ -116,6 +119,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Central Bank Digital Currencies: The Future of Money or State Surveillance?",
         context:
             "Over 130 countries are now exploring or piloting Central Bank Digital Currencies (CBDCs). Proponents argue they will modernise payment infrastructure; critics warn they enable unprecedented government surveillance of financial behaviour.",
+        easyExplanation: "Governments are making their own digital versions of money, like digital dollars. It makes paying easier, but it also lets the government see exactly what you spend your money on.",
         deepDive:
             "China's e-CNY — the world's most advanced CBDC — has processed over ¥7 trillion in transactions since 2020. The Chinese government's ability to set expiry dates on digital money (forcing spending) and restrict purchases by category demonstrates that CBDCs are not simply digital cash — they are programmable monetary policy tools. The EU's Digital Euro project specifically bans programmability features due to civil liberties concerns, creating a fascinating geopolitical split in how democracies versus authoritarian states design money.",
         positives: [
@@ -154,6 +158,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Buy Now Pay Later: Democratising Credit or Fuelling a Debt Crisis?",
         context:
             "BNPL services processed over $130 billion in transactions last year. Regulators in the UK, EU, and US are moving to bring BNPL under consumer credit frameworks, while providers argue the product is safer than traditional credit cards.",
+        easyExplanation: "Apps like Klarna let you buy things now and pay for them later in small chunks. It's helpful if you don't have much money today, but it can be dangerous if you forget to pay and end up in debt.",
         deepDive:
             "The BNPL industry's fastest-growing demographic is 18-24 year olds — a cohort who largely lack credit histories and have never been targeted by traditional lenders. Klarna's internal data shows 40% of its users have never held a credit card. This cuts both ways: for many, BNPL is the first credit product they've responsibly managed; for others, particularly those using multiple BNPL services simultaneously, default rates run at 3× the rate of credit card defaults. The regulatory gap — BNPL defaults don't appear on credit reports — means these users are invisible to the mainstream credit system while accumulating real debt.",
         positives: [
@@ -194,6 +199,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Universal Basic Income: What the Evidence Actually Shows",
         context:
             "Several countries including Finland, Kenya, and Canada have concluded major UBI experiments. As AI threatens structural job displacement, this debate is moving from fringe economics to mainstream political platforms worldwide.",
+        easyExplanation: "Because robots and AI might take over many people's jobs, some think the government should just give everyone a basic amount of money every month to survive.",
         deepDive:
             "Finland's 2017-2018 experiment gave 2,000 unemployed citizens €560/month unconditionally for two years. Results showed recipients were significantly happier, healthier, and trusted institutions more — but employment rates barely shifted. Kenya's GiveDirectly programme, now the world's largest UBI experiment, tells a different story: direct transfers in low-income contexts generated measurable 'cash multiplier' effects, with every $1 transferred generating $2.60 in local economic activity via spending circulation. The lesson appears to be that UBI's effects are highly context-dependent.",
         positives: [
@@ -232,6 +238,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Voter ID Laws: Protecting Integrity or Suppressing Participation?",
         context:
             "Governments across the US, UK, and India have introduced or tightened voter identification requirements. Election authorities cite fraud prevention; opposition groups argue the laws disproportionately disenfranchise marginalised communities.",
+        easyExplanation: "Many countries are making it mandatory to show a special ID card before you can vote. Some say it prevents cheating, while others say it makes it too hard for poor people to vote.",
         deepDive:
             "The UK's introduction of mandatory photo ID in 2023 saw 0.25% of voters turned away at polls — approximately 14,000 people who did not return. Analysis found the policy disproportionately affected ethnic minority voters (4× more likely to lack qualifying ID) and disabled voters (2× more likely). Simultaneously, the number of documented in-person voter fraud cases that year was four. The empirical asymmetry — thousands disenfranchised to prevent a near-non-existent crime — sits at the heart of this debate, regardless of one's political starting point.",
         positives: [
@@ -272,6 +279,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "The Global South's New Bloc: Multipolar World or Fragmented Order?",
         context:
             "The expansion of BRICS to include Saudi Arabia, UAE, Ethiopia, Egypt, Iran, and Argentina signals a structural shift in geopolitics. Nations representing 40% of global GDP are building alternative financial and diplomatic architecture outside Western institutions.",
+        easyExplanation: "A group of powerful countries like India, China, and Brazil are teaming up to create their own systems for money and politics, so they don't have to rely so much on Western countries like the US.",
         deepDive:
             "The creation of the NDB (New Development Bank) and BRICS Pay — a proposed dollar-alternative settlement system — represents the most substantive challenge to post-Bretton Woods financial architecture since its creation in 1944. However, BRICS+ member states collectively hold $4.1 trillion in US Treasury bonds, creating a profound structural dependency on dollar-denominated instruments. The bloc's internal contradictions — India and China have fought border wars, Saudi Arabia and Iran are historic rivals — suggest that institutional competition with Western bodies may be slower and messier than headline announcements imply.",
         positives: [
@@ -310,6 +318,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Climate Migration: The Crisis That Borders Cannot Contain",
         context:
             "The World Bank estimates 216 million people will be internally displaced by climate change by 2050. Coastal erosion, desertification, and extreme weather events are transforming migration from a political issue to a humanitarian imperative.",
+        easyExplanation: "Because of climate change, places are becoming too hot or flooding, forcing millions of people to leave their homes and move to new countries.",
         deepDive:
             "Bangladesh could lose 17% of its landmass to sea-level rise by 2050, displacing approximately 18 million people — equivalent to the entire population of the Netherlands. Yet no legal category of 'climate refugee' exists in international law; the 1951 Refugee Convention covers only persecution, not environmental displacement. Countries in the Global North, which bear the greatest historical responsibility for emissions, are simultaneously tightening asylum criteria — creating a moral and legal contradiction at the core of the climate migration debate.",
         positives: [
@@ -350,6 +359,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Generative AI in Classrooms: Educational Revolution or Academic Crisis?",
         context:
             "Generative AI tools like ChatGPT are now used by an estimated 26% of students globally. Educational institutions are split between embracing the technology as a learning accelerator and banning it as an integrity threat.",
+        easyExplanation: "Students are starting to use AI tools like ChatGPT to help with schoolwork. Some teachers think it's a great way to learn faster, while others worry it makes it too easy to cheat.",
         deepDive:
             "The most intriguing evidence comes from Khan Academy's Khanmigo deployment: students using AI tutors performed 23% better on conceptual understanding assessments than those using traditional resources — but only when the AI was configured to ask Socratic questions rather than provide direct answers. This nuance is critical. The pedagogical design of AI interaction determines whether students develop deeper thinking or simply outsource cognition. Most current institutional deployments have no such guardrails, deploying AI as answer machines rather than thinking partners.",
         positives: [
@@ -388,6 +398,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Humanoid Robots in the Workforce: Labour Partner or Existential Threat?",
         context:
             "Companies including Tesla, Figure, and Boston Dynamics are deploying humanoid robots in manufacturing and logistics. With costs dropping rapidly, economists are revisiting labour displacement models that previously underestimated automation's reach.",
+        easyExplanation: "Companies are building robots that look and walk like humans to work in factories. They are getting cheaper and better, which might mean fewer jobs for real people in the future.",
         deepDive:
             "Figure's humanoid robots at BMW's Spartanburg plant can now complete a full door assembly cycle in 67 seconds — matching the productivity of a trained human worker at roughly ¼ of the total cost of employment over five years. Goldman Sachs projects humanoid robots could address 300 million full-time equivalent jobs globally by 2030. The critical distinction from previous automation waves: prior robots replaced specific physical tasks; humanoid robots with vision, manipulation, and reasoning capabilities can, in principle, be redeployed across any physical job — making sectoral retraining strategies far harder to design.",
         positives: [
@@ -427,6 +438,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Women's Football: Record Crowds, Same Pay Gap",
         context:
             "The 2023 FIFA Women's World Cup drew 2 billion viewers — yet top players still earn as little as 1% of their male equivalents. Governing bodies are under intense pressure to address the structural wage inequality that persists despite record commercial success.",
+        easyExplanation: "Women's soccer is more popular than ever, with billions of people watching. However, the female players still get paid way less than the male players, and people are fighting to make it equal.",
         deepDive:
             "Spain's Jenni Hermoso at the peak of her career earns approximately €400,000 per year. Her male counterpart, Pedri, earns €8 million. The revenue argument — that women's football generates less — is itself undercut by data: the 2023 Women's World Cup generated $570 million in revenue for FIFA, up 300% from 2019. Yet FIFA allocated only $150 million in prize money — roughly 25% of the men's equivalent pot despite proportionally higher revenue growth. The structural issue is that legacy contracts, TV rights arrangements, and historical sponsorship flows are locked into male-sport timelines.",
         positives: [
@@ -465,6 +477,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Mental Health in Elite Sport: Breaking the Last Taboo",
         context:
             "High-profile athletes including Simone Biles, Naomi Osaka, and Ben Simmons have publicly withdrawn from competition citing mental health. Sports institutions are now grappling with whether elite performance culture itself is creating a mental health crisis.",
+        easyExplanation: "Famous athletes are starting to talk openly about being stressed or sad. Before, they were expected to just 'tough it out,' but now teams are realizing that's not healthy.",
         deepDive:
             "A 2024 IOC-commissioned study of 1,200 elite athletes found that 45% reported clinically significant anxiety or depression symptoms — nearly double the rate in age-matched general population samples. The paradox of elite sport is structural: the same psychological traits cultivated for peak performance — obsessive focus, suppression of discomfort — are also significant risk factors for anxiety and burnout. Most institutional responses treat mental health as a performance issue rather than a welfare one.",
         positives: [
@@ -505,6 +518,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Open Banking: The Quiet Revolution Reshaping Personal Finance",
         context:
             "Regulatory mandates in the EU (PSD2) and UK (Open Banking Standard) now require banks to share customer data with authorised third parties via APIs. This has created an ecosystem of 10,000+ fintech apps — but consumer awareness remains low and adoption uneven.",
+        easyExplanation: "New laws let you share your bank info with other helpful apps safely. It helps people who don't have a credit history get loans, but it also means more apps have access to your private money habits.",
         deepDive:
             "Open banking's sleeper impact is in credit decisioning: firms like Experian and Credit Karma now access 12-month transactional data to build credit scores for the 1.5 billion people globally with thin or no credit files. Traditional credit scoring — which privileges existing credit history — has historically excluded young adults, immigrants, and cash-reliant populations. However, the same data that enables fairer lending also enables granular profiling of spending behaviour — raising questions about whether financial data is becoming as contested as health data.",
         positives: [
@@ -543,6 +557,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Embedded Finance: When Every App Becomes a Bank",
         context:
             "Embedded finance — integrating financial services directly into non-financial apps — is projected to reach $7 trillion by 2030. From ride-sharing insurance to social media savings accounts, financial services are becoming invisible infrastructure inside everyday platforms.",
+        easyExplanation: "Apps that aren't banks (like Uber or Instagram) are starting to offer things like bank accounts or insurance. This makes it easier to pay for things, but it also means these apps know even more about you.",
         deepDive:
             "Grab's financial arm in Southeast Asia is the most instructive case study: a ride-hailing startup that now holds a digital banking licence, serves 45 million users with savings accounts, and offers micro-insurance from within its transport app. The company's advantage over traditional banks is data: knowing a user's income patterns, movement data, and spending behaviour allows precise risk underwriting. The regulatory challenge is profound: embedded finance blurs the boundary between regulated entities and technology platforms.",
         positives: [
@@ -583,6 +598,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "The Global Decline of Trust in Institutions",
         context:
             "Edelman's 2024 Trust Barometer found trust in governments below 50% across 28 surveyed democracies for the first time. Simultaneously, trust in NGOs, media, and businesses is falling — a simultaneous multi-institution collapse unprecedented in post-war data.",
+        easyExplanation: "People around the world are trusting their governments and news companies less and less. This is happening because many feel that these big groups aren't fixing problems like expensive housing.",
         deepDive:
             "The most revealing finding is its demographic pattern: trust among 25-44 year olds with university education has collapsed faster than any other group — precisely the demographic institutions expected to be their most supportive base. Causes include social media exposure to institutional failures in real time, wage stagnation among educated younger adults who expected prosperity but experienced housing unaffordability, and visible COVID-19 pandemic response failures. The political consequence is not apathy but volatility.",
         positives: [
@@ -621,6 +637,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Climate Policy After Paris: Are Pledges Becoming Liabilities?",
         context:
             "The gap between governments' Paris Agreement pledges and enacted policy remains 2.5°C of warming — far above the 1.5°C target. With 2025 being the critical year for revised NDCs, the credibility of the entire international climate framework is under scrutiny.",
+        easyExplanation: "Countries made big promises to stop climate change, but they aren't actually doing enough to reach their goals. Now, people are questioning if these promises even matter if there's no way to force them to listen.",
         deepDive:
             "The Paris Agreement's fundamental architecture problem is that it relies on voluntary, nationally determined commitments with no enforcement mechanism. The EU's Carbon Border Adjustment Mechanism (CBAM), which imposes tariffs on carbon-intensive imports, has demonstrably changed policy decisions in exporting nations — not because of diplomatic pressure, but because of market consequences. This suggests that economic mechanisms with real teeth work where diplomatic pledges do not.",
         positives: [
@@ -661,6 +678,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "India's Global Pivoting: Strategic Autonomy in a Bipolar Era",
         context:
             "India simultaneously maintains defence partnerships with Russia, the US, Israel, and France — while chairing the Global South caucus at the G20. As superpower competition intensifies, India's 'strategic autonomy' doctrine is being tested like never before.",
+        easyExplanation: "India is being very smart by staying friends with many different countries like Russia and the US at the same time. This lets them get what they need from everyone without taking sides.",
         deepDive:
             "India's Russia dilemma crystallises the structural tension at the core of strategic autonomy: India depends on Russia for 60% of its defence hardware while its economic future is increasingly tied to the US-aligned technology and financial system. Russia's invasion of Ukraine forced New Delhi to abstain at the UN rather than condemn — a position that strained Western relationships while India quietly became the world's largest buyer of discounted Russian oil.",
         positives: [
@@ -699,6 +717,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Taiwan Strait: War, Deterrence, and the Semiconductor Wildcard",
         context:
             "Taiwan produces 92% of the world's most advanced semiconductor chips. As China increases military pressure and the US expands arms sales, the Taiwan Strait has become the world's most geopolitically consequential 110-mile waterway.",
+        easyExplanation: "Taiwan makes almost all the world's most advanced computer chips. Because these chips are so important, many countries are worried about a conflict between China and Taiwan that could stop them from being made.",
         deepDive:
             "TSMC's position creates a form of deterrence termed the 'silicon shield': any military action that destroyed Taiwan's fabrication plants would simultaneously cripple China's own technology sector, which depends on Taiwanese chips for telecommunications, electric vehicles, and defence systems. China imported $180 billion of semiconductors in 2023 — more than its oil imports. However, TSMC's Arizona and Japan fab expansions are quietly eroding the silicon shield's deterrent value.",
         positives: [
@@ -739,6 +758,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "The Open Source AI Crisis: Power, Safety, and Control",
         context:
             "Meta's release of Llama 3 made a frontier-class AI model freely downloadable for the first time. Governments, safety researchers, and competing AI labs are divided on whether open-source AI is a democratising force or an irreversible safety risk.",
+        easyExplanation: "Meta (the company that owns Facebook) made a very powerful AI and let anyone download it for free. Some think this is great for everyone to learn, while others worry it might be used by bad people.",
         deepDive:
             "The open-source AI debate maps onto earlier internet access debates, but with a critical asymmetry: open internet access allowed anyone to distribute information; open AI model access allows anyone to automate cognition at scale. The Bletchley Park AI Safety Declaration — signed by 28 nations — explicitly flagged open-source frontier models as a governance gap. Yet safety researchers have found more vulnerabilities in closed models than open ones through security-by-obscurity failures.",
         positives: [
@@ -777,6 +797,7 @@ export const FALLBACK_EDITORIALS: Editorial[] = [
         title: "Brain-Computer Interfaces: Medical Miracle or Privacy Catastrophe?",
         context:
             "Neuralink's first human implant received FDA approval, while Synchron has already implanted devices in multiple patients. BCIs translating neural signals into digital commands are moving from science fiction to clinical reality — and the ethical questions are moving with them.",
+        easyExplanation: "Companies are developing chips that can be put inside the brain to let people control computers with their thoughts. This is amazing for helping paralyzed people, but it also raises big questions about brain privacy.",
         deepDive:
             "Synchron's Stentrode device restored digital communication to completely paralysed ALS patients, allowing them to send emails and control smart home devices through thought alone. However, the long-term commercial roadmap is inevitably not therapeutic. Neural interface data is qualitatively different from any existing biometric data: it represents not behaviour, but cognition — thought processes, emotional reactions, attention patterns. No existing privacy framework was designed to govern data from inside the skull.",
         positives: [

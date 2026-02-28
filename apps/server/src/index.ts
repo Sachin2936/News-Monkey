@@ -160,6 +160,22 @@ app.post("/api/typing-results", requireAuth, async (req: AuthenticatedRequest, r
       },
     });
 
+    // ✨ STORAGE LIMIT: Keep only the 10 most recent results per user ✨
+    // Fetch the 10 most recent IDs, then delete anything older
+    const recent = await prisma.typingResult.findMany({
+      where: { userId: req.user!.id },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      select: { id: true },
+    });
+    const recentIds = recent.map(r => r.id);
+    await prisma.typingResult.deleteMany({
+      where: {
+        userId: req.user!.id,
+        id: { notIn: recentIds },
+      },
+    });
+
     // ✨ PROFILE TRIGGERS ✨
     // Automatically process test completion in the background without blocking the response
     ProfileService.processTypingTest(
@@ -179,7 +195,7 @@ app.post("/api/typing-results", requireAuth, async (req: AuthenticatedRequest, r
   }
 });
 
-// GET /api/typing-results - Get all typing results for the authenticated user
+// GET /api/typing-results - Get the 10 most recent typing results for the authenticated user
 app.get("/api/typing-results", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const results = await prisma.typingResult.findMany({
@@ -189,12 +205,55 @@ app.get("/api/typing-results", requireAuth, async (req: AuthenticatedRequest, re
       orderBy: {
         createdAt: 'desc',
       },
+      take: 10, // Only the 10 most recent sessions
     });
 
     res.json(results);
   } catch (error) {
     console.error("Error fetching typing results:", error);
     res.status(500).json({ error: "Failed to fetch typing results" });
+  }
+});
+
+// GET /api/news/by-url - Fetch a specific article by URL (for "Type Again" feature)
+app.get("/api/news/by-url", async (req: Request, res: Response) => {
+  const url = req.query.url as string;
+  if (!url) {
+    res.status(400).json({ error: "url query parameter is required" });
+    return;
+  }
+  try {
+    const dbArticle = await prisma.newsArticle.findUnique({ where: { url } });
+    if (!dbArticle) {
+      res.status(404).json({ error: "Article not found in cache" });
+      return;
+    }
+
+    let content = dbArticle.content;
+    // Fetch full content on-demand if we only have a snippet
+    if (!dbArticle.isFullContent) {
+      const { FullContentService } = await import("./services/news/full-content.service");
+      const fullContent = await FullContentService.fetchFullContent(url);
+      if (fullContent && fullContent.length > 500) {
+        content = fullContent;
+        await prisma.newsArticle.update({
+          where: { url },
+          data: { content: fullContent, isFullContent: true },
+        });
+      }
+    }
+
+    res.json({
+      title: dbArticle.title,
+      content,
+      url: dbArticle.url,
+      sourceName: dbArticle.sourceName,
+      category: dbArticle.category,
+      publishedAt: dbArticle.publishedAt,
+    });
+  } catch (error) {
+    console.error("Error fetching article by URL:", error);
+    res.status(500).json({ error: "Failed to fetch article" });
   }
 });
 

@@ -2,7 +2,9 @@ import prisma from "@News-Monkey/db";
 import { SourceManager } from "./news/source.manager";
 import { MultiRssSource } from "./news/sources/multi-rss.source";
 import { NewsApiSource } from "./news/sources/news-api.source";
+import { NewsDataSource } from "./news/sources/news-data.source";
 import { ScraperSource } from "./news/sources/scraper.source";
+import { GuardianSource } from "./news/sources/guardian.source";
 import { RotationService } from "./news/rotation.service";
 import { FullContentService } from "./news/full-content.service";
 import type { NewsCategory, NormalizedArticle } from "./news/types";
@@ -56,7 +58,9 @@ export class NewsService {
         }));
 
         this.sourceManager.registerSource(new NewsApiSource());
+        this.sourceManager.registerSource(new NewsDataSource());
         this.sourceManager.registerSource(new ScraperSource());
+        this.sourceManager.registerSource(new GuardianSource());
 
         this.isInitialized = true;
         console.log("[NewsService] Modular News system initialized");

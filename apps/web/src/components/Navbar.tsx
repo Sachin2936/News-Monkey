@@ -190,7 +190,7 @@ const Navbar = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <ThemeToggle />
+                  
                     {isPending ? (
                         <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
                     ) : session?.user ? (

@@ -4,23 +4,45 @@ import { useTypingStore } from "@/store/useTypingStore";
 import TypingArea from "@/components/TypingArea";
 import PracticeStats from "@/components/PracticeStats";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, ArrowLeft, BookOpen, Settings2, Repeat } from "lucide-react";
+import { RefreshCw, BookOpen, Settings2, Repeat } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+
+/** Tooltip that appears above the wrapped element on hover. */
+function Tooltip({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <div className="relative group/tip">
+            {children}
+            <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150">
+                <div className="bg-slate-800 border border-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap shadow-xl">
+                    {label}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/** Small keyboard badge rendered inside button labels. */
+function Kbd({ children }: { children: React.ReactNode }) {
+    return (
+        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-md bg-white/10 border border-white/15 text-[10px] font-black leading-none tracking-wide">
+            {children}
+        </span>
+    );
+}
 
 export default function PracticePage() {
     const { article, setArticle, resetTest, isFinished, repeatArticle } = useTypingStore();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const fetchNewArticle = async () => {
+    const fetchNewArticle = useCallback(async () => {
         setLoading(true);
         try {
-            // Fetch fresh news (default to general)
             const res = await fetch(`/api/news?category=general`);
             const articlesList = await res.json();
-
             if (articlesList && articlesList.length > 0) {
                 const a = articlesList[0];
                 setArticle({
@@ -29,7 +51,7 @@ export default function PracticePage() {
                     url: a.url,
                     source: a.sourceName || "General News",
                     category: a.category || "general",
-                    publishedAt: a.publishedAt
+                    publishedAt: a.publishedAt,
                 });
             } else {
                 console.warn("No articles found");
@@ -39,29 +61,46 @@ export default function PracticePage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [setArticle]);
 
+    // ── Keyboard shortcuts ─────────────────────────────────────────────────────
+    //   Escape  →  Repeat current article
+    //   Tab     →  New article
+    //
+    // The TypingArea uses a hidden <textarea> that permanently holds DOM focus,
+    // but Escape and Tab don't produce typed characters so they fire safely.
     useEffect(() => {
-        if (isFinished) {
-            router.push("/results");
-        }
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                repeatArticle();
+            }
+            if (e.key === "Tab") {
+                e.preventDefault();
+                fetchNewArticle();
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [repeatArticle, fetchNewArticle]);
+
+    // Navigate to results when finished
+    useEffect(() => {
+        if (isFinished) router.push("/results");
     }, [isFinished, router]);
 
-    // Cleanup: Reset test state when leaving the practice page
+    // Reset test state on unmount (only if not finished)
     useEffect(() => {
         return () => {
             const state = useTypingStore.getState();
-            if (!state.isFinished) {
-                state.resetTest();
-            }
+            if (!state.isFinished) state.resetTest();
         };
     }, []);
 
-    // Auto-fetch news if none present
+    // Auto-fetch if no article is loaded yet
     useEffect(() => {
-        if (!article) {
-            fetchNewArticle();
-        }
+        if (!article) fetchNewArticle();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
@@ -83,7 +122,9 @@ export default function PracticePage() {
                             <h2 className="text-2xl font-black font-outfit uppercase tracking-tighter text-glow">
                                 Loading Latest News
                             </h2>
-                            <p className="text-muted-foreground animate-pulse font-medium">Preparing your typing session...</p>
+                            <p className="text-muted-foreground animate-pulse font-medium">
+                                Preparing your typing session...
+                            </p>
                         </div>
                     </motion.div>
                 ) : (
@@ -94,8 +135,9 @@ export default function PracticePage() {
                         exit={{ opacity: 0, scale: 1.05 }}
                         className="relative"
                     >
-                        {/* Practice Header */}
+                        {/* ── Practice Header ── */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                            {/* Article title */}
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
@@ -112,24 +154,34 @@ export default function PracticePage() {
                                 </div>
                             </div>
 
+                            {/* Action buttons */}
                             <div className="flex flex-col gap-4 w-full md:w-auto">
                                 <div className="flex gap-4">
-                                    <button
-                                        onClick={repeatArticle}
-                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold group"
-                                        title="Repeat Current Article"
-                                    >
-                                        <Repeat className="w-5 h-5 text-primary group-hover:rotate-180 transition-transform duration-500" />
-                                        <span>Repeat</span>
-                                    </button>
-                                    <button
-                                        onClick={fetchNewArticle}
-                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-primary text-primary-foreground hover:scale-105 transition-all font-bold shadow-lg shadow-primary/20"
-                                        title="Get New Article"
-                                    >
-                                        <RefreshCw className="w-5 h-5" />
-                                        <span>New Article</span>
-                                    </button>
+                                    {/* Repeat */}
+                                    <Tooltip label="Repeat current article  [ Esc ]">
+                                        <button
+                                            onClick={repeatArticle}
+                                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-bold group"
+                                        >
+                                            <Repeat className="w-5 h-5 text-primary group-hover:rotate-180 transition-transform duration-500" />
+                                            <span>Repeat</span>
+                                            <Kbd>Esc</Kbd>
+                                        </button>
+                                    </Tooltip>
+
+                                    {/* New Article */}
+                                    <Tooltip label="Load new article  [ Tab ]">
+                                        <button
+                                            onClick={fetchNewArticle}
+                                            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-primary text-primary-foreground hover:scale-105 transition-all font-bold shadow-lg shadow-primary/20"
+                                        >
+                                            <RefreshCw className="w-5 h-5" />
+                                            <span>New Article</span>
+                                            <Kbd>Tab</Kbd>
+                                        </button>
+                                    </Tooltip>
+
+                                    {/* Settings */}
                                     <Link
                                         href="/settings"
                                         className="p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
@@ -143,8 +195,13 @@ export default function PracticePage() {
                         <PracticeStats />
                         <TypingArea />
 
+                        {/* Bottom hint */}
                         <div className="mt-12 text-center text-muted-foreground/40 text-sm font-medium italic">
-                            Tip: Start typing to begin the timer automatically. Higher accuracy results in more rewards!
+                            Start typing to begin the timer.&nbsp;&nbsp;
+                            <span className="not-italic font-semibold text-muted-foreground/50">Esc</span>
+                            {" "}to repeat &middot;&nbsp;
+                            <span className="not-italic font-semibold text-muted-foreground/50">Tab</span>
+                            {" "}for a new article.
                         </div>
                     </motion.div>
                 )}

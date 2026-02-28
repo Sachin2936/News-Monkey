@@ -39,13 +39,13 @@ function Toggle({ value, onChange, accent = "#6366f1" }: { value: boolean; onCha
     return (
         <button
             onClick={onChange}
-            className="relative flex-shrink-0 transition-all duration-200"
-            style={{ width: 52, height: 28, borderRadius: 14, background: value ? accent : "#e2e8f0" }}
+            className="relative flex-shrink-0 transition-all duration-300 border border-white/10"
+            style={{ width: 52, height: 28, borderRadius: 14, background: value ? accent : "rgba(30, 41, 59, 0.8)" }}
         >
             <motion.div
                 animate={{ x: value ? 26 : 4 }}
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                className="absolute top-[4px] w-5 h-5 bg-white rounded-full shadow-md"
+                className="absolute top-[3px] w-5 h-5 bg-white rounded-full shadow-md"
             />
         </button>
     );
@@ -64,10 +64,10 @@ function ChipGroup({ options, value, onChange, accent = "#6366f1" }: {
                 const active = value === o.value;
                 return (
                     <button key={o.value} onClick={() => onChange(o.value)}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all border"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all border hover:scale-[1.02] active:scale-95"
                         style={active
-                            ? { background: accent + "15", color: accent, borderColor: accent + "50" }
-                            : { background: "transparent", color: "#94a3b8", borderColor: "#e2e8f0" }}>
+                            ? { background: accent + "20", color: accent, borderColor: accent + "50", boxShadow: `0 4px 12px ${accent}20` }
+                            : { background: "rgba(30, 41, 59, 0.5)", color: "#94a3b8", borderColor: "rgba(255, 255, 255, 0.05)" }}>
                         {o.icon && <span>{o.icon}</span>}
                         {o.label}
                     </button>
@@ -86,7 +86,7 @@ function Slider({ value, min, max, step, onChange, accent = "#6366f1", label }: 
         <div className="flex items-center gap-3 w-full max-w-xs">
             <input type="range" min={min} max={max} step={step} value={value}
                 onChange={e => onChange(Number(e.target.value))}
-                className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+                className="flex-1 h-1.5 rounded-full appearance-none cursor-pointer bg-slate-800 border border-slate-700"
                 style={{ accentColor: accent }} />
             <span className="text-sm font-black w-12 text-right" style={{ color: accent }}>
                 {label ? label(value) : value}
@@ -100,21 +100,21 @@ function SettingRow({ icon: Icon, label, desc, children, accent = "#6366f1", bad
     icon?: React.ComponentType<{ className?: string; color?: string; style?: React.CSSProperties }>; label: string; desc?: string; children: React.ReactNode; accent?: string; badge?: string;
 }) {
     return (
-        <div className="flex items-center gap-6 py-5 border-b border-slate-100 last:border-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 py-6 border-b border-white/5 last:border-0 hover:bg-white/[0.01] transition-colors -mx-4 px-4 rounded-2xl">
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
+                <div className="flex items-center gap-2 mb-1">
                     {Icon && <Icon className="w-4 h-4 flex-shrink-0" color={accent} />}
-                    <span className="font-bold text-slate-800">{label}</span>
+                    <span className="font-bold text-slate-200 text-[15px]">{label}</span>
                     {badge && (
-                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
-                            style={{ background: accent + "15", color: accent }}>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                            style={{ background: accent + "10", color: accent, borderColor: accent + "40" }}>
                             {badge}
                         </span>
                     )}
                 </div>
-                {desc && <p className="text-sm text-slate-400 leading-relaxed mt-0.5 ml-6">{desc}</p>}
+                {desc && <p className="text-[13px] text-slate-400 leading-relaxed ml-6">{desc}</p>}
             </div>
-            <div className="flex-shrink-0">{children}</div>
+            <div className="flex-shrink-0 sm:ml-auto ml-6">{children}</div>
         </div>
     );
 }
@@ -127,20 +127,24 @@ function Section({ id, icon: Icon, title, subtitle, accent, children }: {
         <motion.section id={id}
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-3xl overflow-hidden border border-slate-100"
-            style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
-            <div className="px-7 py-5 border-b border-slate-100" style={{ background: accent + "08" }}>
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: accent + "15" }}>
-                        <Icon className="w-5 h-5" color={accent} />
+            className="bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] overflow-hidden border border-white/10 relative"
+            style={{ boxShadow: "0 20px 40px -15px rgba(0,0,0,0.5)" }}>
+
+            {/* Subtle glow behind the section header */}
+            <div className="absolute top-0 left-0 w-full h-32 blur-[80px] opacity-20 pointer-events-none" style={{ background: accent }} />
+
+            <div className="px-7 py-6 border-b border-white/5 relative z-10" style={{ background: accent + "05" }}>
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg border border-white/10" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}80)` }}>
+                        <Icon className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                        <h2 className="font-black text-slate-900 leading-tight">{title}</h2>
-                        <p className="text-[12px] text-slate-400">{subtitle}</p>
+                        <h2 className="text-xl font-black text-slate-100 leading-tight">{title}</h2>
+                        <p className="text-[13px] text-slate-400 font-medium">{subtitle}</p>
                     </div>
                 </div>
             </div>
-            <div className="px-7">{children}</div>
+            <div className="px-7 relative z-10">{children}</div>
         </motion.section>
     );
 }
@@ -175,8 +179,11 @@ export default function SettingsPage() {
         history, clearHistory,
     } = useTypingStore();
 
-    // Apply theme to <html> whenever it changes
-    useThemeApplier(theme);
+    // Enforce dark theme on settings page
+    useEffect(() => {
+        const root = document.documentElement;
+        root.classList.add('dark');
+    }, []);
 
     const [activeSection, setActiveSection] = useState("practice");
     const [saved, setSaved] = useState<string | null>(null);
@@ -218,37 +225,50 @@ export default function SettingsPage() {
         : 0;
 
     return (
-        <div className="min-h-screen" style={{ background: "#f4f5fb" }}>
+        <div className="min-h-screen relative overflow-hidden" style={{ background: "#060a12" }}>
+
+            {/* Background Decorative Elements */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-indigo-900/10 rounded-full blur-[100px] -mr-[20vw] -mt-[20vw]" />
+                <div className="absolute bottom-0 left-0 w-[50vw] h-[50vw] bg-pink-900/10 rounded-full blur-[100px] -ml-[20vw] -mb-[20vw]" />
+                <div className="absolute inset-0 bg-[#060a12]/50" />
+            </div>
+
             {/* hero */}
-            <div className="bg-white border-b border-slate-100">
-                <div className="max-w-6xl mx-auto px-6 py-10">
+            <div className="relative border-b border-white/5 bg-slate-900/40 backdrop-blur-md z-10">
+                <div className="max-w-5xl mx-auto px-6 py-12 md:py-16">
                     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                        <p className="text-[11px] font-black uppercase tracking-[0.28em] text-indigo-500 mb-2">Preferences</p>
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 mb-2">Settings</h1>
-                        <p className="text-slate-400 text-lg">Customise your practice environment, appearance, and data.</p>
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[11px] font-black uppercase tracking-[0.2em] mb-4">
+                            <Sliders className="w-3.5 h-3.5" />
+                            Preferences
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-100 mb-4">Settings</h1>
+                        <p className="text-slate-400 text-lg max-w-xl leading-relaxed">Customize your practice environment, audio feedback, and personal data.</p>
                     </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-6 py-10 flex gap-8 items-start">
+            <div className="relative max-w-5xl mx-auto px-6 py-10 flex flex-col md:flex-row gap-8 items-start z-10">
                 {/* sidebar */}
-                <aside className="hidden lg:flex flex-col gap-1 w-52 sticky top-24 flex-shrink-0">
+                <aside className="hidden md:flex flex-col gap-1 w-56 sticky top-24 flex-shrink-0">
                     {NAV.map(n => {
                         const active = activeSection === n.id;
                         return (
                             <button key={n.id} onClick={() => scrollTo(n.id)}
-                                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left"
-                                style={active ? { background: n.accent + "15", color: n.accent } : { color: "#94a3b8" }}>
+                                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[14px] font-bold transition-all text-left"
+                                style={active
+                                    ? { background: n.accent + "20", color: n.accent, border: `1px solid ${n.accent}40`, boxShadow: `0 4px 12px ${n.accent}20` }
+                                    : { color: "#94a3b8", border: "1px solid transparent" }}>
                                 <n.icon className="w-4 h-4 flex-shrink-0" />
                                 {n.label}
-                                {active && <ChevronRight className="w-3.5 h-3.5 ml-auto" />}
+                                {active && <ChevronRight className="w-3.5 h-3.5 ml-auto opacity-70" />}
                             </button>
                         );
                     })}
                 </aside>
 
                 {/* main */}
-                <div className="flex-1 space-y-6 min-w-0">
+                <div className="flex-1 space-y-8 min-w-0 w-full mb-20">
 
                     {/* ── PRACTICE ── */}
                     <Section id="practice" icon={Clock} title="Practice" subtitle="Session timing and difficulty" accent="#6366f1">
@@ -306,19 +326,7 @@ export default function SettingsPage() {
                     </Section>
 
                     {/* ── APPEARANCE ── */}
-                    <Section id="appearance" icon={Palette} title="Appearance" subtitle="Theme, fonts, and visual style" accent="#ec4899">
-                        <SettingRow icon={SunMedium} label="Colour Theme" desc="Applies immediately. Follow OS, force Light, or force Dark." accent="#ec4899">
-                            <ChipGroup
-                                options={[
-                                    { label: "System", value: "system", icon: "💻" },
-                                    { label: "Light", value: "light", icon: "☀️" },
-                                    { label: "Dark", value: "dark", icon: "🌙" },
-                                ]}
-                                value={theme}
-                                onChange={v => { setTheme(v as any); flash("theme"); }}
-                                accent="#ec4899"
-                            />
-                        </SettingRow>
+                    <Section id="appearance" icon={Palette} title="Appearance" subtitle="Fonts, sizing, and cursor style" accent="#ec4899">
                         <SettingRow icon={Type} label="Article Font Size" desc={`Text size in the typing area. Currently ${fontSize}px — see live preview below.`} accent="#ec4899">
                             <Slider value={fontSize} min={14} max={28} step={1}
                                 onChange={v => { setFontSize(v); flash("fontSize"); }}
@@ -326,9 +334,9 @@ export default function SettingsPage() {
                         </SettingRow>
 
                         {/* live font preview */}
-                        <div className="py-5 border-b border-slate-100">
-                            <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3 ml-6">Live Font Preview</p>
-                            <div className="rounded-2xl px-5 py-4 border border-slate-100 bg-slate-50 text-slate-700 leading-relaxed" style={{ fontSize }}>
+                        <div className="py-6 border-b border-white/5">
+                            <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-4 ml-6">Live Font Preview</p>
+                            <div className="rounded-2xl px-6 py-5 border border-white/10 bg-slate-900/50 text-slate-300 leading-relaxed shadow-inner" style={{ fontSize }}>
                                 The quick brown fox jumps over the lazy dog. 1234567890.
                             </div>
                         </div>
@@ -351,30 +359,24 @@ export default function SettingsPage() {
                     </Section>
 
                     {/* ── TYPING BEHAVIOUR ── */}
-                    <Section id="typing" icon={Keyboard} title="Typing Behaviour" subtitle="Error handling and visual feedback" accent="#0ea5e9">
+                    <Section id="typing" icon={Keyboard} title="Typing Behaviour" subtitle="Visual feedback while typing" accent="#0ea5e9">
                         <SettingRow icon={AlignJustify} label="Word Highlight" desc="Subtly highlight the word you are currently on." accent="#0ea5e9" badge="NEW">
                             <Toggle value={highlightWord} onChange={() => { setHighlightWord(!highlightWord); flash("highlight"); }} accent="#0ea5e9" />
-                        </SettingRow>
-                        <SettingRow icon={ShieldCheck} label="Strict Accuracy" desc="Wrong characters permanently reduce accuracy — even if deleted. This is always enabled to ensure fair scoring." accent="#0ea5e9" badge="On">
-                            <span className="flex items-center gap-1.5 text-sm font-bold text-emerald-600">
-                                <CheckCircle2 className="w-4 h-4" /> Enabled
-                            </span>
                         </SettingRow>
                     </Section>
 
                     {/* ── STATS & DATA ── */}
                     <Section id="stats" icon={BarChart2} title="Stats & Data" subtitle="Your session history and exports" accent="#10b981">
-                        <div className="py-5 border-b border-slate-100">
-                            <div className="grid grid-cols-3 gap-4">
+                        <div className="py-6 border-b border-white/5">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 {[
                                     { label: "Sessions", value: history.length },
                                     { label: "Best WPM", value: bestWpm },
                                     { label: "Avg Accuracy", value: history.length ? `${avgAccuracy}%` : "—" },
                                 ].map(stat => (
-                                    <div key={stat.label} className="rounded-2xl p-4 text-center"
-                                        style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
-                                        <p className="text-2xl font-black text-emerald-700">{stat.value}</p>
-                                        <p className="text-[11px] font-bold text-emerald-500 uppercase tracking-wider mt-1">{stat.label}</p>
+                                    <div key={stat.label} className="rounded-2xl p-5 text-center border border-emerald-900/50 bg-emerald-950/20">
+                                        <p className="text-3xl font-black text-emerald-400 mb-1">{stat.value}</p>
+                                        <p className="text-[11px] font-bold text-emerald-600/80 uppercase tracking-widest">{stat.label}</p>
                                     </div>
                                 ))}
                             </div>
@@ -392,8 +394,8 @@ export default function SettingsPage() {
                             <button onClick={() => {
                                 ["ed-v6", "yd-v1"].forEach(k => localStorage.removeItem(k));
                                 flash("cache");
-                            }} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
-                                {saved === "cache" ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-4 h-4" />}
+                            }} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black border border-white/10 text-slate-300 bg-slate-800/50 hover:bg-slate-700 transition-all">
+                                {saved === "cache" ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <RefreshCw className="w-4 h-4" />}
                                 {saved === "cache" ? "Cleared!" : "Clear Cache"}
                             </button>
                         </SettingRow>
@@ -423,7 +425,7 @@ export default function SettingsPage() {
                                 setHighlightWord(false); setShowLiveWpm(true); setAutoPause(false); setAnimatedBg(true);
                                 setHideErrorSound(false); setDuration(60); flash("reset");
                             }}
-                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black border border-rose-200 text-rose-500 hover:bg-rose-50 transition-all">
+                                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black border border-rose-500/20 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-all">
                                 {saved === "reset" ? <CheckCircle2 className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
                                 {saved === "reset" ? "Reset Done!" : "Reset Defaults"}
                             </button>

@@ -13,6 +13,8 @@ export const env = createEnv({
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     NEWS_API_KEY: z.string().optional(),
     GEMINI_API_KEY: z.string().min(1),
+    NEWS_DATA_API_KEY: z.string().optional(),
+    GUARDIAN_API_KEY: z.string().min(1),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { Newspaper, Github, Twitter, Linkedin } from 'lucide-react';
+import { Newspaper, Github, Linkedin } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
 
 const Footer = () => {
@@ -12,25 +12,22 @@ const Footer = () => {
         <footer className="bg-background/50 border-t border-white/10 pt-16 pb-8">
             <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-                    <div className="col-span-1 md:col-span-2 space-y-4">
+                    <div className="col-span-1 md:col-span-2 space-y-4 pt-4">
                         <Link href={homeHref} className="flex items-center gap-2">
                             <Newspaper className="w-6 h-6 text-primary" />
                             <span className="text-xl font-bold tracking-tight">
                                 News<span className="text-primary">Type</span>
                             </span>
                         </Link>
-                        <p className="text-muted-foreground max-w-sm">
+                        <p className="text-muted-foreground max-w-sm mt-4">
                             The ultimate platform for improving your typing speed while staying
                             up to date with the latest global news and technology trends.
                         </p>
-                        <div className="flex items-center gap-4">
-                            <Link href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                        <div className="flex items-center gap-4 mt-6">
+                            <Link href="https://github.com/Sachin2936" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-colors">
                                 <Github className="w-5 h-5" />
                             </Link>
-                            <Link href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 transition-colors">
-                                <Twitter className="w-5 h-5" />
-                            </Link>
-                            <Link href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 transition-colors">
+                            <Link href="https://www.linkedin.com/in/sachin-singh-29360423ss/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-colors">
                                 <Linkedin className="w-5 h-5" />
                             </Link>
                         </div>
@@ -51,8 +48,8 @@ const Footer = () => {
                         <ul className="space-y-2 text-sm text-muted-foreground">
                             <li><Link href={"#" as any} className="hover:text-primary transition-colors">API Docs</Link></li>
                             <li><Link href={"#" as any} className="hover:text-primary transition-colors">Typing Tips</Link></li>
-                            <li><Link href={"#" as any} className="hover:text-primary transition-colors">Privacy Policy</Link></li>
-                            <li><Link href={"#" as any} className="hover:text-primary transition-colors">Terms of Service</Link></li>
+                            <li><Link href={"/privacy" as any} className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                            <li><Link href={"/terms" as any} className="hover:text-primary transition-colors">Terms of Service</Link></li>
                         </ul>
                     </div>
                 </div>
